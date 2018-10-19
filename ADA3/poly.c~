@@ -1,0 +1,268 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define Max_piles 1000010
+#define Max_queries 1000010
+#define Max_powers 100010
+
+//#define debug_input
+//#define debug_input2
+//int each_pile[Max_piles];
+//#define debug_multi
+struct poly{
+    int power;
+    int *coeff;
+    /*指標*/
+};
+typedef struct poly poly;
+
+int magic_num[Max_queries];
+//int coefficient[Max_powers]
+
+
+poly multiply(poly A,int a_s,int a_e,poly B,int b_s,int b_e);
+int main()
+{
+    poly A;
+    A.power=0;
+    A.coeff=(int*)calloc(Max_powers,sizeof(int));
+    int n_piles,max_power=0;
+    scanf("%d",&n_piles);
+    int each_pile;
+    int i;
+    for(i=0;i<n_piles;i++){
+        //scanf("%d",&each_pile[i]);
+        scanf("%d",&each_pile);
+        //coefficient[each_pile[i]]++;
+        //coefficient[each_pile]++;
+        A.coeff[each_pile]++;
+        /*
+        if(each_pile[i]>max_power){
+            max_power=each_pile[i];
+        }
+        */
+        /*
+        if(each_pile>max_power){
+            max_power=each_pile;
+        }
+        */
+        if(each_pile>A.power){
+            A.power=each_pile;
+        }
+    }
+    /*取得多項式係數*/
+    /*做相乘*/
+    poly ans=multiply(A,0,A.power,A,0,A.power);
+    printf("ans.power==%d\n",ans.power);
+    /*處理ans*/
+    //int modify[Max_powers]={0};
+    /*對角線分半*/
+    for(i=0;i<=ans.power;i++){
+        if(i%2==1){
+            ans.coeff[i]/=2;
+        }
+        else if(i%2==0){
+            ans.coeff[i]=(ans.coeff[i]-(A.coeff[i/2])*(A.coeff[i/2]))/2+(A.coeff[i/2]*A.coeff[i/2]-A.coeff[i/2])/2;
+        }
+    }
+
+    int m_queries;
+    scanf("%d",&m_queries);
+    int magic_num;
+    for(i=0;i<=m_queries-2;i++){
+        //scanf("%d",&magic_num[i]);
+        scanf("%d",&magic_num);
+        if(magic_num<=ans.power){
+            printf("%d ",ans.coeff[magic_num]);
+        }
+        else{
+            printf("0 ");
+        }
+    }
+    scanf("%d",&magic_num);
+    if(magic_num<=ans.power){
+        printf("%d\n",ans.coeff[magic_num]);
+    }
+    else{
+        printf("0\n");
+    }
+    //printf("%d\n",ans.coeff[magic_num]);
+
+    #ifdef debug_input2
+        for(i=0;i<=A.power;i++){
+            printf("%d ",A.coeff[i]);
+        }
+        printf("\n");
+    #endif // debug_input2
+
+    #ifdef debug_input
+        printf("%d\n",n_piles);
+        for(i=0;i<n_piles;i++){
+            printf("%d ",each_pile[i]);
+        }
+        printf("\n");
+        for(i=0;i<=max_power;i++){
+            printf("%d ",coefficient[i]);
+        }
+        printf("\n");
+        printf("%d\n",m_queries);
+        for(i=0;i<m_queries;i++){
+            printf("%d ",magic_num[i]);
+        }
+        printf("\n");
+    #endif // debug_input
+
+    return 0;
+}
+int main01(){//測試multi
+    poly input;
+    scanf("%d",&input.power);
+    int i;
+    for(i=0;i<=input.power;i++){
+        scanf("%d",&input.coeff[i]);
+    }
+    poly ans=multiply(input,0,input.power,input,0,input.power);
+    for(i=0;i<=ans.power;i++){
+        printf("%d ",ans.coeff[i]);
+    }
+    printf("\n");
+}
+poly multiply(poly A,int a_s,int a_e,poly B,int b_s,int b_e){
+    #ifdef debug_multi
+        print(A,B);
+    #endif // debug_multi
+    poly ret;//{0,{0}}
+    ret.power=0;
+    ret.coeff=(int*)calloc((a_e+b_e+1),sizeof(int));
+    /*base case*/
+    int I,J;
+    if(a_s==a_e){
+        /*A是0次方的多項式*/
+        /*但B還沒到0*/
+        ret.power=0;
+        for(J=0,I=b_s;I<=b_e;J++,I++){//B的給到ret內
+            ret.coeff[J]+=B.coeff[I]*A.coeff[0];
+        }
+        /*更新ret的power*/
+        ret.power=J-1;
+        #ifdef debug_multi
+            printf("ret:");
+            print1(ret);
+        #endif // debug_multi
+        return ret;
+    }
+    if(b_s==b_e){
+        /*B是0次方的多項式*/
+        /*但A還沒到0*/
+        ret.power=0;
+        for(J=0,I=a_s;I<=a_e;J++,I++){//A的給到ret內
+            ret.coeff[J]+=A.coeff[I]*B.coeff[0];
+        }
+        /*更新ret的power*/
+        ret.power=J-1;
+        #ifdef debug_multi
+            printf("ret:");
+            print1(ret);
+        #endif // debug_multi
+        return ret;
+    }
+    int a_m=a_s+(a_e-a_s)/2;
+    int b_m=b_s+(b_e-b_s)/2;
+    /*奇數時左邊多一個*/
+    poly A0,A1,B0,B1;
+    A0.power=a_m;
+    A0.coeff=(int*)calloc((A0.power+1),sizeof(int));
+    int i;
+    for(i=0;i<=a_m;i++){
+        A0.coeff[i]=A.coeff[i];
+    }
+    A1.power=A.power-a_m-1;
+    A1.coeff=(int*)calloc((A1.power+1),sizeof(int));
+    int j;
+    for(i=a_m+1,j=0;i<=A.power;i++,j++){
+        A1.coeff[j]=A.coeff[i];
+    }
+
+    B0.power=b_m;
+    B0.coeff=(int*)calloc((B0.power+1),sizeof(int));
+    for(i=0;i<=b_m;i++){
+        B0.coeff[i]=B.coeff[i];
+    }
+    B1.power=B.power-b_m-1;
+    B1.coeff=(int*)calloc((B1.power+1),sizeof(int));
+    for(i=b_m+1,j=0;i<=B.power;i++,j++){
+        B1.coeff[j]=B.coeff[i];
+    }
+
+    poly U,V,W,Z;
+    U=multiply(A0,0,A0.power,B0,0,B0.power);
+    V=multiply(A0,0,A0.power,B1,0,B1.power);
+    W=multiply(A1,0,A1.power,B0,0,B0.power);
+    Z=multiply(A1,0,A1.power,B1,0,B1.power);
+    /*
+    #ifdef debug_multi
+        printf("U:");
+        print1(U);
+        printf("V:");
+        print1(V);
+        printf("W:");
+        print1(W);
+        printf("Z:");
+        print1(Z);
+    #endif // debug_multi
+    */
+    /*先給ret貼U的係數*/
+    for(i=0;i<=U.power;i++){
+        ret.coeff[i]+=U.coeff[i];
+        #ifdef debug_multi
+            printf("U:%d\n",U.coeff[i]);
+        #endif // debug_multi
+    }
+    /*b_m不對 從何開始貼?*/
+    for(i=0,j=b_m+1;i<=V.power;i++,j++){/*V是A0*B1*/
+        ret.coeff[j]+=V.coeff[i];
+        #ifdef debug_multi
+            printf("V:%d\n",V.coeff[i]);
+        #endif // debug_multi
+    }
+    for(i=0,j=a_m+1;i<=W.power;i++,j++){/*W是A1*B0*/
+        ret.coeff[j]+=W.coeff[i];
+        #ifdef debug_multi
+            printf("W:%d\n",W.coeff[i]);
+        #endif // debug_multi
+    }
+    for(i=0,j=(a_m+1)+(b_m+1);i<=Z.power;i++,j++){/*Z是A1*B1*/
+        ret.coeff[j]+=Z.coeff[i];
+        #ifdef debug_multi
+            printf("Z:%d\n",Z.coeff[i]);
+        #endif // debug_multi
+    }
+    ret.power=(a_e+b_e);
+    #ifdef debug_multi
+        printf("ret:");
+        print1(ret);
+    #endif // debug_multi
+    return ret;
+}
+void print1(poly X){
+    int i;
+    for(i=0;i<=X.power;i++){
+        printf("%d ",X.coeff[i]);
+    }
+    printf("\n");
+}
+void print(poly A,poly B){
+    int i;
+    printf("A:");
+    for(i=0;i<=A.power;i++){
+        printf("%d ",A.coeff[i]);
+    }
+    printf("\n");
+    printf("B:");
+    for(i=0;i<=B.power;i++){
+        printf("%d ",B.coeff[i]);
+    }
+    printf("\n");
+    printf("------------\n");
+}
+
